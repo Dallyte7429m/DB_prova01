@@ -44,6 +44,7 @@
         .tarefas {
             display: flex; 
             justify-content: space-around; 
+            flex-wrap: wrap;
         }
 
         .tarefa {
@@ -72,6 +73,14 @@
         select {
             margin-top: 10px; 
         }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -86,83 +95,97 @@
     </header>
     <main>
         <h2>Gerenciamento de Tarefas</h2>
-        <section class="tarefas">
-             <div class="tarefa">
-                <h3>A Fazer</h3>
-                <p>Descrição: Tarefa 1</p>
-                <button onclick="editTask()">Editar</button>
-                <button onclick="deleteTask()">Excluir</button>
-                <select onchange="changeStatus(this)">
-                    <option value="A Fazer">A Fazer</option>
-                    <option value="Fazendo">Fazendo</option>
-                    <option value="Pronto">Pronto</option>
-                </select>
-                <button onclick="updateStatus()">Alterar Status</button>
-             </div>
-
-             <div class="tarefa">
-                <h3>Fazendo</h3>
-                <p>Descrição: Tarefa 2</p>
-                <button onclick="editTask()">Editar</button>
-                <button onclick="deleteTask()">Excluir</button>
-                <select onchange="changeStatus(this)">
-                    <option value="A Fazer">A Fazer</option>
-                    <option value="Fazendo">Fazendo</option>
-                    <option value="Pronto">Pronto</option>
-                </select>
-                <button onclick="updateStatus()">Alterar Status</button>
-             </div>
-
-             <div class="tarefa">
-                 <h3>Pronto</h3>0
-                 <p>Descrição: Tarefa 3</p>
-                 <button onclick="editTask()">Editar</button>
-                 <button onclick="deleteTask()">Excluir</button>
-                 <select onchange="changeStatus(this)">
-                     <option value="A Fazer">A Fazer</option>
-                     <option value="Fazendo">Fazendo</option>
-                     <option value="Pronto">Pronto</option>
-                 </select>
-                 <button onclick="updateStatus()">Alterar Status</button>
-             </div>
-
-             <div class="tarefa">
-                 <h3>Adicionar Nova Tarefa</h3>
-                 <input type="text" id="newTaskDescription" placeholder="Descrição da nova tarefa" required />
-                 <button onclick="addTask()">Adicionar Tarefa</button>
-             </div>
-
+        <section class="tarefas" id="taskContainer">
+            <!-- Tarefas serão inseridas dinamicamente aqui -->
         </section>
+
+        <div class="tarefa">
+            <h3>Adicionar Nova Tarefa</h3>
+            <input type="text" id="newTaskDescription" placeholder="Descrição da nova tarefa" required />
+            <button onclick="addTask()">Adicionar Tarefa</button>
+        </div>
 
     </main>
 
     <script>
-        function editTask() {
-            alert('Função de edição não implementada.');
+        // Array para armazenar tarefas
+        let tasks = [
+            { id: 1, description: "Tarefa 1", status: "A Fazer" },
+            { id: 2, description: "Tarefa 2", status: "Fazendo" },
+            { id: 3, description: "Tarefa 3", status: "Pronto" },
+        ];
+
+        // Função para renderizar as tarefas na tela
+        function renderTasks() {
+            const taskContainer = document.getElementById('taskContainer');
+            taskContainer.innerHTML = '';  // Limpa o conteúdo atual
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.classList.add('tarefa');
+                taskElement.innerHTML = `
+                    <h3>${task.status}</h3>
+                    <p>Descrição: ${task.description}</p>
+                    <button onclick="editTask(${task.id})">Editar</button>
+                    <button onclick="deleteTask(${task.id})">Excluir</button>
+                    <select onchange="changeStatus(${task.id}, this)">
+                        <option value="A Fazer" ${task.status === "A Fazer" ? "selected" : ""}>A Fazer</option>
+                        <option value="Fazendo" ${task.status === "Fazendo" ? "selected" : ""}>Fazendo</option>
+                        <option value="Pronto" ${task.status === "Pronto" ? "selected" : ""}>Pronto</option>
+                    </select>
+                    <button onclick="updateStatus(${task.id})">Alterar Status</button>
+                `;
+                taskContainer.appendChild(taskElement);
+            });
         }
 
-        function deleteTask() {
-            alert('Função de exclusão não implementada.');
-        }
-
-        function changeStatus(selectElement) {
-            const status = selectElement.value;
-            alert('Status alterado para ' + status);
-        }
-
-        function updateStatus() {
-           alert('Função de atualização de status não implementada.');
-        }
-
+        // Função para adicionar uma nova tarefa
         function addTask() {
-           const taskDescription = document.getElementById('newTaskDescription').value;
-           if (taskDescription) {
-               alert('Nova tarefa adicionada: ' + taskDescription);
-               document.getElementById('newTaskDescription').value = ''; 
-           } else {
-               alert('Por favor, insira uma descrição da tarefa.');
-           }
-       }
+            const taskDescription = document.getElementById('newTaskDescription').value;
+            if (taskDescription) {
+                const newTask = {
+                    id: tasks.length + 1,  // Gerar um ID único
+                    description: taskDescription,
+                    status: 'A Fazer'
+                };
+                tasks.push(newTask);
+                renderTasks();
+                document.getElementById('newTaskDescription').value = '';  // Limpar o campo
+            } else {
+                alert('Por favor, insira uma descrição da tarefa.');
+            }
+        }
+
+        // Função para editar a tarefa
+        function editTask(id) {
+            const task = tasks.find(task => task.id === id);
+            const newDescription = prompt('Editar descrição da tarefa:', task.description);
+            if (newDescription) {
+                task.description = newDescription;
+                renderTasks();
+            }
+        }
+
+        // Função para excluir uma tarefa
+        function deleteTask(id) {
+            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                tasks = tasks.filter(task => task.id !== id);
+                renderTasks();
+            }
+        }
+
+        // Função para alterar o status da tarefa
+        function changeStatus(id, selectElement) {
+            const task = tasks.find(task => task.id === id);
+            task.status = selectElement.value;
+        }
+
+        // Função para atualizar o status da tarefa
+        function updateStatus(id) {
+            alert('Status da tarefa ' + id + ' foi atualizado.');
+        }
+
+        // Inicializa as tarefas
+        renderTasks();
     </script>
 
 </body>
